@@ -1,0 +1,33 @@
+name: Engenheiro de Apps Sênior
+on:
+  workflow_dispatch:
+    inputs:
+      nome_projeto:
+        description: "Nome do projeto a ser gerado"
+        required: true
+      tipo:
+        description: "Tipo de projeto (flutter, react, node, etc.)"
+        required: true
+
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configura ambiente
+        run: sudo apt update && sudo apt install -y zip git
+
+      - name: Cria estrutura do projeto
+        run: |
+          mkdir ${{ github.event.inputs.nome_projeto }}
+          echo "Gerando projeto tipo: ${{ github.event.inputs.tipo }}" > ${{ github.event.inputs.nome_projeto }}/README.md
+          # Aqui o Engenheiro pode inserir geração de código real (via script ou API)
+      
+      - name: Compacta projeto
+        run: zip -r ${{ github.event.inputs.nome_projeto }}.zip ${{ github.event.inputs.nome_projeto }}
+
+      - name: Publica Release com o ZIP
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ github.event.inputs.nome_projeto }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
