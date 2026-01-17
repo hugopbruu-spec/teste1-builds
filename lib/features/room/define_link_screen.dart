@@ -1,24 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/utils/validators.dart';
+import '../../core/repositories/chat_repository.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_scaffold.dart';
+import '../../core/utils/validators.dart';
 
-class DefineLinkScreen extends StatefulWidget {
+class DefineLinkScreen extends ConsumerStatefulWidget {
   const DefineLinkScreen({super.key});
 
   @override
-  State<DefineLinkScreen> createState() => _DefineLinkScreenState();
+  ConsumerState<DefineLinkScreen> createState() => _DefineLinkScreenState();
 }
 
-class _DefineLinkScreenState extends State<DefineLinkScreen> {
+class _DefineLinkScreenState extends ConsumerState<DefineLinkScreen> {
   final controller = TextEditingController();
   String? linkType;
 
   void _detect() {
-    setState(() => linkType = detectLinkType(controller.text.trim()));
+    final type = detectLinkType(controller.text.trim());
+    setState(() => linkType = type);
+    ref.read(chatRepositoryProvider.notifier).sendSystemMessage(
+          'Conteúdo definido ($type).',
+        );
   }
 
   @override

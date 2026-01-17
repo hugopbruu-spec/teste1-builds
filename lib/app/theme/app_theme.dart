@@ -27,7 +27,7 @@ class AppTheme {
       centerTitle: true,
       foregroundColor: AppTokens.onSurface,
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AppTokens.surfaceLight,
       elevation: 0,
       shape: RoundedRectangleBorder(

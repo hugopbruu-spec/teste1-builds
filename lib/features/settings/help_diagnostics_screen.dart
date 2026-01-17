@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/repositories/room_repository.dart';
 import '../../core/services/connectivity_service.dart';
 import '../../core/services/sync_engine.dart';
 import '../../core/widgets/app_button.dart';
@@ -13,6 +14,7 @@ class HelpDiagnosticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final connectivity = ref.watch(connectivityProvider);
     final sync = ref.watch(syncEngineProvider);
+    final roomState = ref.watch(roomRepositoryProvider);
     return GradientScaffold(
       appBar: AppBar(title: const Text('Ajuda & Diagnóstico')),
       child: ListView(
@@ -26,6 +28,7 @@ class HelpDiagnosticsScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text('Conexão: ${connectivity.isOffline ? 'Offline' : 'Online'}'),
                 Text('Sync: ${sync.message}'),
+                Text('Papel: ${roomState.isHost ? 'Host' : 'Convidado'}'),
               ],
             ),
           ),
@@ -61,6 +64,24 @@ class HelpDiagnosticsScreen extends ConsumerWidget {
           AppButton(
             label: 'Ressincronizar',
             onPressed: () => ref.read(syncEngineProvider.notifier).resyncNow(),
+            isOutlined: true,
+          ),
+          const SizedBox(height: 16),
+          AppButton(
+            label: roomState.room.hostDisconnected
+                ? 'Simular host reconectado'
+                : 'Simular host desconectado',
+            onPressed: () => ref
+                .read(roomRepositoryProvider.notifier)
+                .toggleHostDisconnected(!roomState.room.hostDisconnected),
+            isOutlined: true,
+          ),
+          const SizedBox(height: 8),
+          AppButton(
+            label: roomState.isHost ? 'Virar convidado' : 'Virar host',
+            onPressed: () => ref
+                .read(roomRepositoryProvider.notifier)
+                .setRole(!roomState.isHost),
             isOutlined: true,
           ),
         ],

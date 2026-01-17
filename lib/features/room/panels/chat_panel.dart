@@ -1,31 +1,29 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../core/utils/fake_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/models/chat_message.dart';
+import '../../../core/repositories/chat_repository.dart';
 import '../../../core/widgets/app_button.dart';
 
-class ChatPanel extends StatefulWidget {
+class ChatPanel extends ConsumerStatefulWidget {
   const ChatPanel({super.key});
 
   @override
-  State<ChatPanel> createState() => _ChatPanelState();
+  ConsumerState<ChatPanel> createState() => _ChatPanelState();
 }
 
-class _ChatPanelState extends State<ChatPanel> {
+class _ChatPanelState extends ConsumerState<ChatPanel> {
   final controller = TextEditingController();
   bool cooldown = false;
-  final messages = [...fakeMessages];
 
   Future<void> _send() async {
-    if (controller.text.trim().isEmpty || cooldown) return;
+    final text = controller.text.trim();
+    if (text.isEmpty || cooldown) return;
     setState(() {
       cooldown = true;
-      messages.add({
-        'author': 'Você',
-        'message': controller.text.trim(),
-        'system': false,
-      });
       controller.clear();
     });
+    ref.read(chatRepositoryProvider.notifier).sendMessage('Você', text);
     await Future<void>.delayed(const Duration(seconds: 2));
     if (mounted) {
       setState(() => cooldown = false);
@@ -34,6 +32,7 @@ class _ChatPanelState extends State<ChatPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final messages = ref.watch(chatRepositoryProvider);
     return Column(
       children: [
         ListView.builder(
@@ -41,17 +40,16 @@ class _ChatPanelState extends State<ChatPanel> {
           physics: const NeverScrollableScrollPhysics(),
           itemCount: messages.length,
           itemBuilder: (context, index) {
-            final message = messages[index];
-            final isSystem = message['system'] == true;
+            final ChatMessage message = messages[index];
             return ListTile(
               title: Text(
-                message['author']!,
+                message.author,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: isSystem ? Colors.orangeAccent : Colors.white,
+                  color: message.isSystem ? Colors.orangeAccent : Colors.white,
                 ),
               ),
-              subtitle: Text(message['message']!),
+              subtitle: Text(message.message),
             );
           },
         ),
