@@ -4,11 +4,13 @@ enum ParticipantStatus { online, buffering, offline }
 
 class Participant {
   const Participant({
+    required this.id,
     required this.name,
     required this.role,
     required this.status,
   });
 
+  final String id;
   final String name;
   final ParticipantRole role;
   final ParticipantStatus status;

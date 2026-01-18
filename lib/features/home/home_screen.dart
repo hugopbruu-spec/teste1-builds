@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/services/auth_service.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_scaffold.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authServiceProvider).currentUser;
     return GradientScaffold(
       appBar: AppBar(
         title: const Text('Início'),
@@ -16,6 +19,13 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             onPressed: () => context.go('/notifications'),
             icon: const Icon(Icons.notifications_none),
+          ),
+          IconButton(
+            onPressed: () async {
+              await ref.read(authServiceProvider).signOut();
+              if (context.mounted) context.go('/login');
+            },
+            icon: const Icon(Icons.logout),
           ),
         ],
       ),
@@ -27,11 +37,11 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bem-vindo de volta, Lia',
+                  'Bem-vindo, ${user?.email ?? 'usuário'}',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
-                const Text('Pronta para assistir algo com a galera?'),
+                const Text('Pronto para assistir algo com a galera?'),
               ],
             ),
           ),

@@ -1,38 +1,33 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ConnectivityState {
   ConnectivityState({
     required this.isOffline,
-    required this.isReconnecting,
   });
 
   final bool isOffline;
-  final bool isReconnecting;
+}
 
-  ConnectivityState copyWith({bool? isOffline, bool? isReconnecting}) {
-    return ConnectivityState(
-      isOffline: isOffline ?? this.isOffline,
-      isReconnecting: isReconnecting ?? this.isReconnecting,
-    );
+class ConnectivityService {
+  ConnectivityService(this._connectivity);
+
+  final Connectivity _connectivity;
+
+  Stream<ConnectivityState> watch() async* {
+    yield await _current();
+    await for (final result in _connectivity.onConnectivityChanged) {
+      yield ConnectivityState(isOffline: result == ConnectivityResult.none);
+    }
+  }
+
+  Future<ConnectivityState> _current() async {
+    final result = await _connectivity.checkConnectivity();
+    return ConnectivityState(isOffline: result == ConnectivityResult.none);
   }
 }
 
-class ConnectivityService extends StateNotifier<ConnectivityState> {
-  ConnectivityService() : super(ConnectivityState(isOffline: false, isReconnecting: false));
-
-  void simulateOffline() {
-    state = state.copyWith(isOffline: true, isReconnecting: false);
-  }
-
-  void simulateReconnecting() {
-    state = state.copyWith(isOffline: false, isReconnecting: true);
-  }
-
-  void simulateOnline() {
-    state = state.copyWith(isOffline: false, isReconnecting: false);
-  }
-}
-
-final connectivityProvider = StateNotifierProvider<ConnectivityService, ConnectivityState>(
-  (ref) => ConnectivityService(),
-);
+final connectivityProvider = StreamProvider<ConnectivityState>((ref) {
+  final service = ConnectivityService(Connectivity());
+  return service.watch();
+});

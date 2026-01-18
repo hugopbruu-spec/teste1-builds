@@ -1,19 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/models/room.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_chip.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_scaffold.dart';
+import '../room/controllers/room_controller.dart';
 
-class CreateRoomScreen extends StatefulWidget {
+class CreateRoomScreen extends ConsumerStatefulWidget {
   const CreateRoomScreen({super.key});
 
   @override
-  State<CreateRoomScreen> createState() => _CreateRoomScreenState();
+  ConsumerState<CreateRoomScreen> createState() => _CreateRoomScreenState();
 }
 
-class _CreateRoomScreenState extends State<CreateRoomScreen> {
+class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
   int selected = 0;
+  bool isLoading = false;
+
+  RoomMode get selectedMode {
+    switch (selected) {
+      case 1:
+        return RoomMode.coBrowsing;
+      case 2:
+        return RoomMode.broadcast;
+      default:
+        return RoomMode.synced;
+    }
+  }
+
+  Future<void> _create() async {
+    setState(() => isLoading = true);
+    final actions = ref.read(roomActionsProvider);
+    final roomId = await actions.createRoom(selectedMode);
+    if (roomId.isNotEmpty) {
+      ref.read(activeRoomIdProvider.notifier).state = roomId;
+      if (mounted) context.go('/lobby');
+    }
+    if (mounted) setState(() => isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +78,8 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
             const Spacer(),
             AppButton(
               label: 'Continuar',
-              onPressed: () => context.go('/lobby'),
+              onPressed: isLoading ? null : _create,
+              isLoading: isLoading,
             ),
           ],
         ),

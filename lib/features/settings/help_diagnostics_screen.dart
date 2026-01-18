@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/repositories/room_repository.dart';
 import '../../core/services/connectivity_service.dart';
-import '../../core/services/sync_engine.dart';
-import '../../core/widgets/app_button.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_scaffold.dart';
+import '../room/controllers/room_controller.dart';
 
 class HelpDiagnosticsScreen extends ConsumerWidget {
   const HelpDiagnosticsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectivity = ref.watch(connectivityProvider);
-    final sync = ref.watch(syncEngineProvider);
-    final roomState = ref.watch(roomRepositoryProvider);
+    final connectivityAsync = ref.watch(connectivityProvider);
+    final isOffline = connectivityAsync.value?.isOffline ?? false;
+    final roomAsync = ref.watch(activeRoomProvider);
     return GradientScaffold(
       appBar: AppBar(title: const Text('Ajuda & Diagnóstico')),
       child: ListView(
@@ -26,63 +24,26 @@ class HelpDiagnosticsScreen extends ConsumerWidget {
               children: [
                 Text('Diagnóstico rápido', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
-                Text('Conexão: ${connectivity.isOffline ? 'Offline' : 'Online'}'),
-                Text('Sync: ${sync.message}'),
-                Text('Papel: ${roomState.isHost ? 'Host' : 'Convidado'}'),
+                Text('Conexão: ${isOffline ? 'Offline' : 'Online'}'),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          AppButton(
-            label: 'Simular offline',
-            onPressed: () => ref.read(connectivityProvider.notifier).simulateOffline(),
-          ),
-          const SizedBox(height: 8),
-          AppButton(
-            label: 'Simular reconexão',
-            onPressed: () => ref.read(connectivityProvider.notifier).simulateReconnecting(),
-            isOutlined: true,
-          ),
-          const SizedBox(height: 8),
-          AppButton(
-            label: 'Voltar online',
-            onPressed: () => ref.read(connectivityProvider.notifier).simulateOnline(),
-            isOutlined: true,
-          ),
-          const SizedBox(height: 16),
-          AppButton(
-            label: 'Simular jitter alto',
-            onPressed: () => ref.read(syncEngineProvider.notifier).simulateAdjusting(),
-          ),
-          const SizedBox(height: 8),
-          AppButton(
-            label: 'Simular fora de sync',
-            onPressed: () => ref.read(syncEngineProvider.notifier).simulateOutOfSync(),
-            isOutlined: true,
-          ),
-          const SizedBox(height: 8),
-          AppButton(
-            label: 'Ressincronizar',
-            onPressed: () => ref.read(syncEngineProvider.notifier).resyncNow(),
-            isOutlined: true,
-          ),
-          const SizedBox(height: 16),
-          AppButton(
-            label: roomState.room.hostDisconnected
-                ? 'Simular host reconectado'
-                : 'Simular host desconectado',
-            onPressed: () => ref
-                .read(roomRepositoryProvider.notifier)
-                .toggleHostDisconnected(!roomState.room.hostDisconnected),
-            isOutlined: true,
-          ),
-          const SizedBox(height: 8),
-          AppButton(
-            label: roomState.isHost ? 'Virar convidado' : 'Virar host',
-            onPressed: () => ref
-                .read(roomRepositoryProvider.notifier)
-                .setRole(!roomState.isHost),
-            isOutlined: true,
+          roomAsync.when(
+            data: (roomState) => GlassContainer(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Sala ativa', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  Text('Código: ${roomState.room.code}'),
+                  Text('Modo: ${roomState.room.modeLabel}'),
+                  Text('Participantes: ${roomState.participants.length}'),
+                ],
+              ),
+            ),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
           ),
         ],
       ),

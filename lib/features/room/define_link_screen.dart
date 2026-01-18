@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/repositories/chat_repository.dart';
+import '../../core/services/chat_service.dart';
+import '../../core/services/room_service.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_scaffold.dart';
 import '../../core/utils/validators.dart';
+import 'controllers/room_controller.dart';
 
 class DefineLinkScreen extends ConsumerStatefulWidget {
   const DefineLinkScreen({super.key});
@@ -19,16 +21,24 @@ class _DefineLinkScreenState extends ConsumerState<DefineLinkScreen> {
   final controller = TextEditingController();
   String? linkType;
 
-  void _detect() {
+  Future<void> _detect(String roomId) async {
     final type = detectLinkType(controller.text.trim());
     setState(() => linkType = type);
-    ref.read(chatRepositoryProvider.notifier).sendSystemMessage(
-          'Conteúdo definido ($type).',
+    await ref.read(roomServiceProvider).updateContentUrl(roomId, controller.text.trim());
+    await ref.read(chatServiceProvider).sendMessage(
+          roomId: roomId,
+          author: 'Sistema',
+          message: 'Conteúdo definido ($type).',
+          isSystem: true,
         );
   }
 
   @override
   Widget build(BuildContext context) {
+    final roomId = ref.watch(activeRoomIdProvider);
+    if (roomId == null) {
+      return const GradientScaffold(child: Center(child: Text('Nenhuma sala ativa.')));
+    }
     return GradientScaffold(
       appBar: AppBar(title: const Text('Definir Link')),
       child: Padding(
@@ -43,7 +53,7 @@ class _DefineLinkScreenState extends ConsumerState<DefineLinkScreen> {
             const SizedBox(height: 12),
             AppButton(
               label: 'Detectar',
-              onPressed: _detect,
+              onPressed: () => _detect(roomId),
               isOutlined: true,
             ),
             const SizedBox(height: 16),

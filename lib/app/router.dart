@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/services/auth_service.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/onboarding_screen.dart';
 import '../features/auth/splash_screen.dart';
@@ -22,8 +23,23 @@ import '../features/settings/settings_screen.dart';
 import '../features/states/error_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateProvider);
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: GoRouterRefreshStream(
+      ref.read(authServiceProvider).authStateChanges(),
+    ),
+    redirect: (context, state) {
+      final isLoggedIn = authState.valueOrNull != null;
+      final isAuthRoute = state.uri.path == '/login' || state.uri.path == '/onboarding';
+      if (!isLoggedIn && !isAuthRoute && state.uri.path != '/') {
+        return '/login';
+      }
+      if (isLoggedIn && isAuthRoute) {
+        return '/home';
+      }
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/',

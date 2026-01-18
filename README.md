@@ -1,8 +1,11 @@
 # Sync Room
 
-Aplicativo Flutter de salas sincronizadas para assistir, navegar e compartilhar em tempo real.
+Aplicativo Flutter de salas sincronizadas com Firebase (Auth, Firestore, FCM) e WebRTC.
 
 ## Como rodar
+
+1. Atualize os placeholders em `lib/firebase_options.dart` com os dados do seu projeto Firebase.
+2. Substitua o placeholder em `android/app/google-services.json`.
 
 ```bash
 flutter pub get
@@ -14,24 +17,25 @@ flutter run
 ```
 lib/
   app/            # App, rotas, tema
-  core/           # Widgets reutilizáveis e serviços
+  core/           # Models, services e widgets
   features/       # Módulos de telas
-assets/           # Imagens locais
+android/app/      # google-services.json placeholder
 ```
 
-## Como simular estados
+## Fluxo de dados (resumo)
 
-No menu **Ajuda & Diagnóstico**, use os botões para:
-- Simular offline e reconexão.
-- Simular jitter alto e fora de sincronização.
-- Forçar "Ressincronizar" no modo sincronizado.
+- Auth: Firebase Authentication (email/senha).
+- Salas: Firestore (rooms, participants, sync, messages).
+- Chat: Firestore realtime.
+- Voz/Transmissão: WebRTC com signaling via Firestore.
+- Notificações: FCM preparado.
 
 ## Checklist de testes manuais
 
-- Autenticação básica e navegação entre telas.
-- Criar sala gera código curto e abre Lobby.
-- Entrar com código válido/invalidado (fake).
-- Definir link detecta tipo e mostra preview.
-- Painéis inferiores (Chat/Voz/Participantes/Opções).
-- Botão de Ressincronizar altera estado visual.
-- Diagnóstico simula offline e estados de sync.
+- Criar conta e entrar.
+- Criar sala e entrar com código.
+- Ver participantes em tempo real.
+- Enviar mensagens no chat (tempo real).
+- Atualizar play/pause no modo sincronizado.
+- Iniciar/entrar em chamada de voz.
+- Iniciar/entrar em transmissão.

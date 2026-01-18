@@ -8,7 +8,8 @@ class NetworkPerformanceScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectivity = ref.watch(connectivityProvider);
+    final connectivityAsync = ref.watch(connectivityProvider);
+    final isOffline = connectivityAsync.value?.isOffline ?? false;
     return GradientScaffold(
       appBar: AppBar(title: const Text('Rede & Desempenho')),
       child: ListView(
@@ -28,13 +29,7 @@ class NetworkPerformanceScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           Text('Status de conexão', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          Text(
-            connectivity.isOffline
-                ? 'Offline'
-                : connectivity.isReconnecting
-                    ? 'Reconectando…'
-                    : 'Online',
-          ),
+          Text(isOffline ? 'Offline' : 'Online'),
         ],
       ),
     );
